@@ -4,6 +4,8 @@ import { AppService } from './app.service';
 import { TitularModule } from './titular/titular.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { BancoModule } from './banco/banco.module';
+import { ContaBancoModule } from './conta-banco/conta-banco.module';
 
 @Module({
   imports: [
@@ -19,6 +21,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       synchronize: process.env.DB_SYNCHRONIZE === 'true',
     }),
     TitularModule,
+    BancoModule,
+    ContaBancoModule,
   ],
   controllers: [AppController],
   providers: [AppService],
