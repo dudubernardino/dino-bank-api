@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateTitularDto } from './dto/create-titular.dto';
 import { UpdateTitularDto } from './dto/update-titular.dto';
@@ -12,36 +16,81 @@ export class TitularService {
   ) {}
 
   async create(createTitularDto: CreateTitularDto) {
-    const titular = await this.repository.create(createTitularDto);
+    const { cpf } = createTitularDto;
 
-    return this.repository.save(titular);
+    await this.verifyTitularExists(cpf);
+
+    try {
+      const titular = await this.repository.create(createTitularDto);
+
+      return this.repository.save(titular);
+    } catch (error) {
+      throw new BadRequestException(
+        'Não foi possível criar um novo titular, verifique seus dados',
+      );
+    }
   }
 
   async findAll(): Promise<Titular[]> {
-    return await this.repository.find();
+    try {
+      const getTitular = await this.repository.find();
+
+      return getTitular;
+    } catch (error) {
+      throw new BadRequestException('Não foi possível buscar os titulares');
+    }
   }
 
   async findOne(id: string): Promise<Titular> {
-    return await this.repository.findOne(id);
+    try {
+      const getTitular = await this.repository.findOne(id);
+
+      return getTitular;
+    } catch (error) {
+      throw new BadRequestException('Não foi possível buscar o titular');
+    }
   }
 
   async update(
     id: string,
     updateTitularDto: UpdateTitularDto,
   ): Promise<Titular> {
-    const titular = await this.repository.preload({
-      id: id,
-      ...updateTitularDto,
-    });
+    try {
+      const { cpf } = updateTitularDto;
 
-    if (!titular) throw new NotFoundException(`Item ${id} não encontrado`);
+      await this.verifyTitularExists(cpf);
 
-    return this.repository.save(titular);
+      const titular = await this.repository.preload({
+        id: id,
+        ...updateTitularDto,
+      });
+
+      if (!titular) throw new NotFoundException(`Item ${id} não encontrado`);
+
+      return this.repository.save(titular);
+    } catch (error) {
+      throw new BadRequestException(
+        'Não foi possível editar o titular, verifique os dados',
+      );
+    }
   }
 
   async remove(id: string) {
-    const titular = await this.findOne(id);
+    try {
+      const titular = await this.findOne(id);
 
-    return this.repository.remove(titular);
+      return this.repository.remove(titular);
+    } catch (error) {
+      throw new BadRequestException('Não foi possível deletar o titular');
+    }
+  }
+
+  async verifyTitularExists(cpf: string) {
+    const getTitular = await this.repository.findOne({
+      where: { cpf },
+    });
+
+    if (getTitular)
+      throw new BadRequestException('O Titular já possui conta nesse Banco');
   }
 }

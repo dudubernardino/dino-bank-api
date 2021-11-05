@@ -29,6 +29,71 @@ export class ContaBancoService {
   async create(createContaBancoDto: CreateContaBancoDto) {
     const { titularId, bancoId } = createContaBancoDto;
 
+    const getContaBanco = await this.verifyContaBancoExists(titularId, bancoId);
+
+    const { bancoInfos, titularInfos } = getContaBanco;
+
+    try {
+      const contaBanco = this.repository.create({
+        titular: titularInfos,
+        banco: bancoInfos,
+        ...createContaBancoDto,
+      });
+
+      return this.repository.save(contaBanco);
+    } catch (error) {
+      throw new BadRequestException(
+        'Não foi possível criar a conta no banco, verifique seus dados',
+      );
+    }
+  }
+
+  async findAll(): Promise<ContaBanco[]> {
+    try {
+      const getContaBanco = await this.repository.find();
+
+      return getContaBanco;
+    } catch (error) {
+      throw new BadRequestException('Não foi possível buscar a contaBanco');
+    }
+  }
+
+  async findOne(id: string): Promise<ContaBanco> {
+    try {
+      const getContaBanco = await this.repository.findOne(id);
+
+      return getContaBanco;
+    } catch (error) {
+      throw new BadRequestException('Não foi possível buscar a contaBanco');
+    }
+  }
+
+  async update(id: string, updateContaBancoDto: UpdateContaBancoDto) {
+    const { titularId, bancoId } = updateContaBancoDto;
+
+    await this.verifyContaBancoExists(titularId, bancoId);
+
+    const contaBanco = await this.repository.preload({
+      id: id,
+      ...updateContaBancoDto,
+    });
+
+    if (!contaBanco) throw new NotFoundException(`Item ${id} não encontrado`);
+
+    return this.repository.save(contaBanco);
+  }
+
+  async remove(id: string) {
+    try {
+      const contaBanco = await this.findOne(id);
+
+      return this.repository.remove(contaBanco);
+    } catch (error) {
+      throw new BadRequestException('Não foi possível deletar a contaBanco');
+    }
+  }
+
+  async verifyContaBancoExists(titularId: string, bancoId: string) {
     const getTitularInfo = await this.titularRepository.findOne(titularId);
     const getBancoInfo = await this.bancoRepository.findOne(bancoId);
 
@@ -50,43 +115,9 @@ export class ContaBancoService {
     if (!!getContaBanco.length)
       throw new BadRequestException('O Titular já possui conta nesse Banco');
 
-    try {
-      const contaBanco = this.repository.create({
-        titular: getTitularInfo,
-        banco: getBancoInfo,
-        ...createContaBancoDto,
-      });
-
-      return this.repository.save(contaBanco);
-    } catch (error) {
-      throw new BadRequestException(
-        'Não foi possível criar a conta no banco, verifique seus dados',
-      );
-    }
-  }
-
-  async findAll(): Promise<ContaBanco[]> {
-    return await this.repository.find();
-  }
-
-  async findOne(id: string): Promise<ContaBanco> {
-    return await this.repository.findOne(id);
-  }
-
-  async update(id: string, updateContaBancoDto: UpdateContaBancoDto) {
-    const contaBanco = await this.repository.preload({
-      id: id,
-      ...updateContaBancoDto,
-    });
-
-    if (!contaBanco) throw new NotFoundException(`Item ${id} não encontrado`);
-
-    return this.repository.save(contaBanco);
-  }
-
-  async remove(id: string) {
-    const contaBanco = await this.findOne(id);
-
-    return this.repository.remove(contaBanco);
+    return {
+      titularInfos: getTitularInfo,
+      bancoInfos: getBancoInfo,
+    };
   }
 }

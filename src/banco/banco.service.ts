@@ -1,8 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateBancoDto } from './dto/create-banco.dto';
 import { UpdateBancoDto } from './dto/update-banco.dto';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { Banco } from '../banco/entities/banco.entity';
 
 @Injectable()
@@ -12,33 +16,80 @@ export class BancoService {
   ) {}
 
   async create(createBancoDto: CreateBancoDto) {
-    const banco = await this.repository.create(createBancoDto);
+    const { codigo, agencia } = createBancoDto;
 
-    return this.repository.save(banco);
+    await this.verifyBancoExists(codigo, agencia);
+
+    try {
+      const banco = await this.repository.create(createBancoDto);
+
+      return this.repository.save(banco);
+    } catch (error) {
+      throw new BadRequestException(
+        'Não foi possível criar um novo banco, verifique seus dados',
+      );
+    }
   }
 
   async findAll(): Promise<Banco[]> {
-    return await this.repository.find();
+    try {
+      const getBanco = await this.repository.find();
+
+      return getBanco;
+    } catch (error) {
+      throw new BadRequestException('Não foi possível buscar os bancos');
+    }
   }
 
   async findOne(id: string): Promise<Banco> {
-    return await this.repository.findOne(id);
+    try {
+      const getBanco = await this.repository.findOne(id);
+
+      return getBanco;
+    } catch (error) {
+      throw new BadRequestException('Não foi possível buscar os bancos');
+    }
   }
 
   async update(id: string, updateBancoDto: UpdateBancoDto): Promise<Banco> {
-    const banco = await this.repository.preload({
-      id: id,
-      ...updateBancoDto,
-    });
+    try {
+      const { codigo, agencia } = updateBancoDto;
 
-    if (!banco) throw new NotFoundException(`Item ${id} não encontrado`);
+      await this.verifyBancoExists(codigo, agencia);
 
-    return this.repository.save(banco);
+      const banco = await this.repository.preload({
+        id: id,
+        ...updateBancoDto,
+      });
+
+      if (!banco) throw new NotFoundException(`Item ${id} não encontrado`);
+
+      return this.repository.save(banco);
+    } catch (error) {
+      throw new BadRequestException(
+        'Não foi possível editar o banco, verifique os dados',
+      );
+    }
   }
 
   async remove(id: string) {
-    const banco = await this.findOne(id);
+    try {
+      const banco = await this.findOne(id);
 
-    return this.repository.remove(banco);
+      return this.repository.remove(banco);
+    } catch (error) {
+      throw new BadRequestException('Não foi possível deletar o banco');
+    }
+  }
+
+  async verifyBancoExists(codigo: string, agencia: string) {
+    const getBanco = await this.repository.findOne({
+      where: [
+        { codigo: Like(`%${codigo}%`) },
+        { agencia: Like(`%${agencia}%`) },
+      ],
+    });
+
+    if (getBanco) throw new BadRequestException('O Banco já foi cadastrado');
   }
 }
