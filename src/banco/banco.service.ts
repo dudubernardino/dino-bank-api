@@ -33,7 +33,9 @@ export class BancoService {
 
   async findAll(): Promise<Banco[]> {
     try {
-      const getBanco = await this.repository.find();
+      const getBanco = await this.repository.find({
+        relations: ['contaBanco'],
+      });
 
       return getBanco;
     } catch (error) {
@@ -43,7 +45,9 @@ export class BancoService {
 
   async findOne(id: string): Promise<Banco> {
     try {
-      const getBanco = await this.repository.findOne(id);
+      const getBanco = await this.repository.findOne(id, {
+        relations: ['contaBanco'],
+      });
 
       return getBanco;
     } catch (error) {
@@ -76,7 +80,7 @@ export class BancoService {
     try {
       const banco = await this.findOne(id);
 
-      return this.repository.remove(banco);
+      return await this.repository.remove(banco);
     } catch (error) {
       throw new BadRequestException('Não foi possível deletar o banco');
     }

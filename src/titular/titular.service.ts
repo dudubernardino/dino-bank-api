@@ -79,7 +79,7 @@ export class TitularService {
     try {
       const titular = await this.findOne(id);
 
-      return this.repository.remove(titular);
+      return await this.repository.remove(titular);
     } catch (error) {
       throw new BadRequestException('Não foi possível deletar o titular');
     }
