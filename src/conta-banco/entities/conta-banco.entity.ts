@@ -4,7 +4,13 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
+  ManyToOne,
+  OneToOne,
+  JoinColumn,
 } from 'typeorm';
+
+import { Banco } from '../../banco/entities/banco.entity';
+import { Titular } from '../../titular/entities/titular.entity';
 
 @Entity()
 export class ContaBanco extends BaseEntity {
@@ -26,4 +32,18 @@ export class ContaBanco extends BaseEntity {
     default: () => 'CURRENT_TIMESTAMP',
   })
   updatedAt: Date;
+
+  @ManyToOne(() => Banco, (banco) => banco.contaBanco, {
+    cascade: true,
+    eager: true,
+  })
+  @JoinColumn()
+  banco: Banco;
+
+  @OneToOne(() => Titular, (titular) => titular.contaBanco, {
+    cascade: true,
+    eager: true,
+  })
+  @JoinColumn()
+  titular: Titular;
 }

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsDate } from 'class-validator';
+import { IsNotEmpty, IsString, IsDate, IsDateString } from 'class-validator';
 
 export class CreateTitularDto {
   @ApiProperty({ example: 'Eduardo' })
@@ -12,8 +12,8 @@ export class CreateTitularDto {
   @IsNotEmpty()
   cpf: string;
 
-  @ApiProperty({ example: '11/02/2000' })
-  @IsDate()
+  @ApiProperty({ example: '2000-02-11' })
+  @IsDateString()
   @IsNotEmpty()
   dataNascimento: Date;
 

@@ -11,18 +11,18 @@ export class BancoService {
     @InjectRepository(Banco) private readonly repository: Repository<Banco>,
   ) {}
 
-  create(createBancoDto: CreateBancoDto) {
-    const banco = this.repository.create(createBancoDto);
+  async create(createBancoDto: CreateBancoDto) {
+    const banco = await this.repository.create(createBancoDto);
 
     return this.repository.save(banco);
   }
 
-  findAll(): Promise<Banco[]> {
-    return this.repository.find();
+  async findAll(): Promise<Banco[]> {
+    return await this.repository.find();
   }
 
-  findOne(id: string): Promise<Banco> {
-    return this.repository.findOne(id);
+  async findOne(id: string): Promise<Banco> {
+    return await this.repository.findOne(id);
   }
 
   async update(id: string, updateBancoDto: UpdateBancoDto): Promise<Banco> {

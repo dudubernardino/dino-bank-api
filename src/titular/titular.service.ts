@@ -11,18 +11,18 @@ export class TitularService {
     @InjectRepository(Titular) private readonly repository: Repository<Titular>,
   ) {}
 
-  create(createTitularDto: CreateTitularDto) {
-    const titular = this.repository.create(createTitularDto);
+  async create(createTitularDto: CreateTitularDto) {
+    const titular = await this.repository.create(createTitularDto);
 
     return this.repository.save(titular);
   }
 
-  findAll(): Promise<Titular[]> {
-    return this.repository.find();
+  async findAll(): Promise<Titular[]> {
+    return await this.repository.find();
   }
 
-  findOne(id: string): Promise<Titular> {
-    return this.repository.findOne(id);
+  async findOne(id: string): Promise<Titular> {
+    return await this.repository.findOne(id);
   }
 
   async update(

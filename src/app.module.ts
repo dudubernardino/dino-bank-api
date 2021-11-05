@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { TitularModule } from './titular/titular.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+
+import { TitularModule } from './titular/titular.module';
 import { BancoModule } from './banco/banco.module';
 import { ContaBancoModule } from './conta-banco/conta-banco.module';
 

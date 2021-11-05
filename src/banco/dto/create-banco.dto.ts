@@ -1,14 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsInt } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateBancoDto {
-  @ApiProperty({ example: 4554 })
-  @IsInt()
+  @ApiProperty({ example: '4554' })
+  @IsString()
   @IsNotEmpty()
-  codigo: number;
+  codigo: string;
 
-  @ApiProperty({ example: 123456 })
-  @IsInt()
+  @ApiProperty({ example: '123456' })
+  @IsString()
   @IsNotEmpty()
-  agencia: number;
+  agencia: string;
 }
