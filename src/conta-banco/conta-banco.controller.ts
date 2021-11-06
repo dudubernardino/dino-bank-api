@@ -10,7 +10,9 @@ import {
 import { ContaBancoService } from './conta-banco.service';
 import { BankTransferDto } from './dto/bank-transfer.dto';
 import { CreateContaBancoDto } from './dto/create-conta-banco.dto';
+import { GenerateBilletDto } from './dto/generate-billet.dto';
 import { UpdateContaBancoDto } from './dto/update-conta-banco.dto';
+import { VerifyBilletDto } from './dto/verify-billet.dto';
 
 @Controller('conta-banco')
 export class ContaBancoController {
@@ -52,5 +54,15 @@ export class ContaBancoController {
   @Post('/transferencia')
   bankTransfer(@Body() bankTransferDto: BankTransferDto) {
     return this.contaBancoService.bankTransfer(bankTransferDto);
+  }
+
+  @Post('/boleto')
+  generateBillet(@Body() generateBilletDto: GenerateBilletDto) {
+    return this.contaBancoService.generateBillet(generateBilletDto);
+  }
+
+  @Post('/boleto/validar')
+  verifyBillet(@Body() verifyBilletDto: VerifyBilletDto) {
+    return this.contaBancoService.verifyBillet(verifyBilletDto);
   }
 }
