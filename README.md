@@ -33,7 +33,6 @@ Technologies that I used to develop this api
 - [Swagger](https://swagger.io/)
 - [Eslint](https://eslint.org/)
 - [Prettier](https://prettier.io/)
-- [EditorConfig](https://editorconfig.org/)
 
 ## 💻 Getting started
 
