@@ -8,6 +8,7 @@ import {
   Delete,
 } from '@nestjs/common';
 import { ContaBancoService } from './conta-banco.service';
+import { BankTransferDto } from './dto/bank-transfer.dto';
 import { CreateContaBancoDto } from './dto/create-conta-banco.dto';
 import { UpdateContaBancoDto } from './dto/update-conta-banco.dto';
 
@@ -41,5 +42,15 @@ export class ContaBancoController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.contaBancoService.remove(id);
+  }
+
+  @Get('/accountBalance/:id')
+  getAccountBalance(@Param('id') id: string) {
+    return this.contaBancoService.getAccountBalance(id);
+  }
+
+  @Post('/transferencia')
+  bankTransfer(@Body() bankTransferDto: BankTransferDto) {
+    return this.contaBancoService.bankTransfer(bankTransferDto);
   }
 }

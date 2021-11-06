@@ -2,11 +2,14 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
-  HttpException,
 } from '@nestjs/common';
+
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateContaBancoDto } from './dto/create-conta-banco.dto';
 import { UpdateContaBancoDto } from './dto/update-conta-banco.dto';
+import { ReturnAccountBallanceDto } from './dto/account-balance.dto';
+import { BankTransferDto } from './dto/bank-transfer.dto';
+
 import { Repository } from 'typeorm';
 
 import { ContaBanco } from './entities/conta-banco.entity';
@@ -97,6 +100,94 @@ export class ContaBancoService {
     }
   }
 
+  async getAccountBalance(id): Promise<ReturnAccountBallanceDto> {
+    const getContaBanco = await this.repository.findOne(id, {
+      relations: ['titular', 'banco'],
+    });
+
+    if (!getContaBanco)
+      throw new BadRequestException('Não foi possível encontrar a contaBanco');
+
+    return {
+      titular: getContaBanco.titular,
+      saldo: getContaBanco.saldo,
+    };
+  }
+
+  async bankTransfer(bankTransferDto: BankTransferDto) {
+    const { conta, agencia, digito, titularSenderId, valor } = bankTransferDto;
+
+    const getRecipientContaBanco = await this.repository.findOne({
+      relations: ['titular', 'banco'],
+      where: {
+        conta,
+        digito,
+        banco: {
+          agencia,
+        },
+      },
+    });
+
+    if (!getRecipientContaBanco)
+      throw new NotFoundException('ContaBanco do recebedor não encontrada');
+
+    const verifyTitularSenderExists = await this.titularRepository.findOne({
+      where: { id: titularSenderId },
+    });
+
+    if (!verifyTitularSenderExists)
+      throw new NotFoundException('Titular Remetente não encontrado');
+
+    const getSenderContaBanco = await this.repository.findOne({
+      relations: ['titular', 'banco'],
+      where: {
+        titular: {
+          id: titularSenderId,
+        },
+      },
+    });
+
+    if (!getSenderContaBanco)
+      throw new NotFoundException('ContaBanco do titular não encontrada');
+
+    const { saldo } = getSenderContaBanco;
+
+    if (saldo === 0 || valor > saldo)
+      throw new BadRequestException(
+        'Transferência não realizada, verifique o seu saldo',
+      );
+
+    const updateRecipientContaBanco = await this.repository.preload({
+      id: getRecipientContaBanco.id,
+      saldo: (getRecipientContaBanco.saldo += valor),
+      ...getRecipientContaBanco,
+    });
+
+    if (!updateRecipientContaBanco)
+      throw new NotFoundException(
+        'Não foi possível realizar a transferência, verifique seus dados',
+      );
+
+    await this.repository.save(updateRecipientContaBanco);
+
+    const updateSenderContaBanco = await this.repository.preload({
+      id: getSenderContaBanco.id,
+      saldo: (getSenderContaBanco.saldo -= valor),
+      ...getSenderContaBanco,
+    });
+
+    if (!updateSenderContaBanco)
+      throw new NotFoundException(
+        'Não foi possível realizar a transferência, verifique seus dados',
+      );
+
+    await this.repository.save(updateSenderContaBanco);
+
+    return {
+      message: 'Transferência realizada com sucesso',
+    };
+  }
+
   async verifyContaBancoExists(titularId: string, bancoId: string) {
     const getTitularInfo = await this.titularRepository.findOne(titularId);
     const getBancoInfo = await this.bancoRepository.findOne(bancoId);
@@ -104,7 +195,7 @@ export class ContaBancoService {
     if (!getTitularInfo) throw new NotFoundException('Titular não encontrado');
     if (!getBancoInfo) throw new NotFoundException('Banco não encontrado');
 
-    const getContaBanco = await this.repository.find({
+    const getContaBanco = await this.repository.findOne({
       relations: ['titular', 'banco'],
       where: {
         titular: {
@@ -116,12 +207,13 @@ export class ContaBancoService {
       },
     });
 
-    if (!!getContaBanco.length)
+    if (!getContaBanco)
       throw new BadRequestException('O Titular já possui conta nesse Banco');
 
     return {
       titularInfos: getTitularInfo,
       bancoInfos: getBancoInfo,
+      contaBancoInfos: getContaBanco,
     };
   }
 }
